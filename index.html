@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kişisel Panel</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;min-height:100vh}
+.app{max-width:680px;margin:0 auto;padding:1.25rem 1rem 4rem}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.header h1{font-size:20px;font-weight:600;color:#1a1a1a}
+.header p{font-size:12px;color:#888;margin-top:2px}
+.nav{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
+.nav-btn{padding:7px 16px;font-size:13px;border-radius:99px;border:1px solid #ddd;background:#fff;color:#555;cursor:pointer;font-family:inherit;transition:all 0.15s}
+.nav-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a;font-weight:500}
+.page{display:none}.page.active{display:block}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.25rem}
+.metric{background:#fff;border-radius:12px;padding:1rem;text-align:center;border:1px solid #eee}
+.metric-val{font-size:24px;font-weight:600;color:#1a1a1a}
+.metric-lbl{font-size:11px;color:#999;margin-top:3px}
+.card{background:#fff;border:1px solid #eee;border-radius:14px;padding:1rem 1.125rem;margin-bottom:12px}
+.card-title{font-size:14px;font-weight:600;color:#1a1a1a;margin-bottom:0.875rem;display:flex;align-items:center;gap:8px}
+.week-nav{display:flex;align-items:center;gap:10px;margin-bottom:1rem}
+.week-nav button{padding:6px 14px;font-size:12px;border-radius:8px;border:1px solid #ddd;background:#fff;color:#555;cursor:pointer;font-family:inherit}
+.week-lbl{font-size:13px;font-weight:600;color:#1a1a1a;flex:1;text-align:center}
+.day-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;cursor:pointer}
+.day-row:last-child{border-bottom:none}
+.day-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.day-name{font-size:13px;font-weight:600;color:#1a1a1a;flex:1}
+.day-pct{font-size:11px;color:#999;min-width:28px;text-align:right}
+.chevron{font-size:12px;color:#bbb;transition:transform 0.2s}
+.chevron.open{transform:rotate(180deg)}
+.detail{display:none;padding:6px 0 4px 17px}
+.detail.open{display:block}
+.habit-row{display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;border-bottom:1px solid #f8f8f8}
+.habit-row:last-of-type{border-bottom:none}
+.habit-emoji{font-size:16px;width:24px;text-align:center}
+.habit-name{font-size:12px;color:#555;flex:1}
+.check-box{width:22px;height:22px;border-radius:6px;border:1.5px solid #ddd;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;font-size:13px}
+.check-box.on{background:#22c55e;border-color:#22c55e;color:#fff}
+.day-badges{display:flex;gap:3px;flex-wrap:wrap}
+.badge{width:20px;height:20px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px}
+.badge.on{background:#dcfce7}
+.note-wrap{margin-top:8px}
+.note-wrap textarea{width:100%;font-size:12px;border:1px solid #eee;border-radius:8px;padding:7px 10px;resize:none;height:52px;color:#1a1a1a;background:#fafafa;font-family:inherit}
+.rest-info{font-size:12px;color:#bbb;padding:6px 0}
+.section-lbl{font-size:11px;color:#999;margin-bottom:6px;margin-top:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+.input-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.input-row label{font-size:12px;color:#777;min-width:100px}
+.input-row input{flex:1;padding:7px 10px;font-size:13px;border:1px solid #eee;border-radius:8px;background:#fafafa;color:#1a1a1a;font-family:inherit}
+.save-btn{padding:8px 20px;font-size:13px;border-radius:8px;border:none;background:#1a1a1a;color:#fff;cursor:pointer;font-family:inherit;font-weight:500}
+.save-toast{display:none;font-size:11px;color:#22c55e;margin-left:10px;font-weight:500}
+.prog-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0.75rem}
+.hist-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px}
+.hist-row:last-child{border-bottom:none}
+.hist-wk{color:#777;min-width:80px;font-size:12px}
+.hist-bar-wrap{flex:1;background:#f0f0f0;border-radius:99px;height:6px;overflow:hidden}
+.hist-bar{height:100%;border-radius:99px;background:#1a1a1a}
+.hist-pct{color:#999;font-size:12px;min-width:32px;text-align:right}
+.empty-state{text-align:center;padding:2rem;color:#bbb;font-size:13px}
+.program-grid{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;font-size:13px;line-height:1.9}
+.program-grid .lbl{color:#bbb}
+.program-grid .val{color:#555}
+.program-grid .rest{color:#ddd}
+.tag{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:500}
+.tag-green{background:#dcfce7;color:#166534}
+.tag-blue{background:#dbeafe;color:#1e40af}
+.tag-orange{background:#ffedd5;color:#9a3412}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div>
+      <h1>💪 Kişisel Panel</h1>
+      <p id="today-lbl"></p>
+    </div>
+    <div style="font-size:13px;color:#bbb" id="streak-lbl"></div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="showPage('disiplin',this)">Disiplin</button>
+    <button class="nav-btn" onclick="showPage('antrenman',this)">Antrenman</button>
+    <button class="nav-btn" onclick="showPage('beslenme',this)">Beslenme</button>
+    <button class="nav-btn" onclick="showPage('gecmis',this)">Geçmiş</button>
+  </div>
+
+  <div id="page-disiplin" class="page active">
+    <div class="metrics" id="dis-metrics">
+      <div class="metric"><div class="metric-val">—</div><div class="metric-lbl">Haftalık %</div></div>
+      <div class="metric"><div class="metric-val">—</div><div class="metric-lbl">Tamamlanan</div></div>
+      <div class="metric"><div class="metric-val">—</div><div class="metric-lbl">Kalan</div></div>
+    </div>
+    <div class="week-nav">
+      <button onclick="changeWeek(-1)">◀ Önceki</button>
+      <div class="week-lbl" id="week-lbl"></div>
+      <button onclick="changeWeek(1)">Sonraki ▶</button>
+    </div>
+    <div class="card">
+      <div class="card-title">📅 Bu hafta</div>
+      <div id="days-list"></div>
+    </div>
+  </div>
+
+  <div id="page-antrenman" class="page">
+    <div class="card">
+      <div class="card-title">🗓️ Haftalık program</div>
+      <div style="font-size:11px;color:#bbb;margin-bottom:10px">3 gün + OFF + 2 gün + OFF · Push / Pull / Legs</div>
+      <div class="program-grid">
+        <span class="lbl">Pazartesi</span><span class="val">Push 1 — Göğüs + Triceps</span>
+        <span class="lbl">Salı</span><span class="val">Pull 1 — Sırt + Biceps</span>
+        <span class="lbl">Çarşamba</span><span class="rest">OFF — Dinlenme</span>
+        <span class="lbl">Perşembe</span><span class="val">Push 2 — Omuz + Triceps</span>
+        <span class="lbl">Cuma</span><span class="val">Legs — Bacak</span>
+        <span class="lbl">Cumartesi</span><span class="rest">OFF — Dinlenme</span>
+        <span class="lbl">Pazar</span><span class="rest">OFF — Dinlenme</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🚲 Günlük kardio</div>
+      <div style="font-size:13px;color:#555;line-height:2">
+        <div>🚲 Bisiklet gidiş-dönüş → <strong>30 dk</strong></div>
+        <div>🚶 Antrenman sonu eğimli yürüyüş → <strong>20 dk</strong></div>
+        <div style="margin-top:6px;font-size:11px;color:#bbb">Toplam ~50 dk · Haftada 5 gün · Ekstra kardio gerekmez</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📏 Ölçüler</div>
+      <div class="prog-grid" id="olcu-display">
+        <div class="metric"><div class="metric-val" id="m-kilo">105</div><div class="metric-lbl">kg</div></div>
+        <div class="metric"><div class="metric-val" id="m-kol">51</div><div class="metric-lbl">kol cm</div></div>
+        <div class="metric"><div class="metric-val" id="m-gogus">—</div><div class="metric-lbl">göğüs cm</div></div>
+        <div class="metric"><div class="metric-val" id="m-bel">—</div><div class="metric-lbl">bel cm</div></div>
+      </div>
+      <div class="section-lbl">Güncelle</div>
+      <div class="input-row"><label>Kilo (kg)</label><input type="number" id="inp-kilo" placeholder="105"></div>
+      <div class="input-row"><label>Kol (cm)</label><input type="number" id="inp-kol" placeholder="51"></div>
+      <div class="input-row"><label>Göğüs (cm)</label><input type="number" id="inp-gogus" placeholder=""></div>
+      <div class="input-row"><label>Bel (cm)</label><input type="number" id="inp-bel" placeholder=""></div>
+      <button class="save-btn" onclick="saveOlculer()">Kaydet</button>
+      <span class="save-toast" id="olcu-toast">✓ Kaydedildi</span>
+    </div>
+  </div>
+
+  <div id="page-beslenme" class="page">
+    <div class="metrics">
+      <div class="metric"><div class="metric-val">~190g</div><div class="metric-lbl">Protein hedef</div></div>
+      <div class="metric"><div class="metric-val">2.643</div><div class="metric-lbl">Kalori hedef</div></div>
+      <div class="metric"><div class="metric-val">3L</div><div class="metric-lbl">Su hedef</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🕐 Öğün zamanlaması</div>
+      <div style="display:grid;grid-template-columns:60px 1fr;gap:4px 12px;font-size:13px;line-height:1.9">
+        <span style="color:#bbb">08:00</span><span style="color:#555">Kahvaltı — yumurta, yulaf, protein tozu</span>
+        <span style="color:#bbb">12:00</span><span style="color:#555">Antrenman öncesi — pirinç patlağı</span>
+        <span style="color:#bbb">13:30</span><span style="color:#555">Antrenman sonu — protein tozu</span>
+        <span style="color:#bbb">16:00</span><span style="color:#555">Ana öğün — tavuk/hindi, pilav, sebze</span>
+        <span style="color:#bbb">20:00</span><span style="color:#555">Gece — yumurta / süzme yoğurt / lor</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📝 Bugünün kaydı</div>
+      <div class="input-row"><label>Protein (g)</label><input type="number" id="inp-protein" placeholder="190"></div>
+      <div class="input-row"><label>Kalori</label><input type="number" id="inp-kalori" placeholder="2643"></div>
+      <div class="input-row"><label>Su (litre)</label><input type="number" id="inp-su" placeholder="3" step="0.1"></div>
+      <div style="margin-bottom:10px">
+        <textarea id="inp-yemek" style="width:100%;font-size:12px;border:1px solid #eee;border-radius:8px;padding:8px 10px;resize:none;height:60px;color:#1a1a1a;background:#fafafa;font-family:inherit" placeholder="Bugün ne yedin? Notlarını buraya bırak..."></textarea>
+      </div>
+      <button class="save-btn" onclick="saveBeslenme()">Kaydet</button>
+      <span class="save-toast" id="beslenme-toast">✓ Kaydedildi</span>
+    </div>
+    <div class="card" id="beslenme-log-card">
+      <div class="card-title">📋 Son kayıtlar</div>
+      <div id="beslenme-log-list"><div class="empty-state">Henüz kayıt yok.</div></div>
+    </div>
+  </div>
+
+  <div id="page-gecmis" class="page">
+    <div class="card">
+      <div class="card-title">📊 Haftalık disiplin skoru</div>
+      <div id="hist-list"><div class="empty-state">Birkaç hafta takip ettikten sonra grafik burada çıkar.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">⚖️ Kilo takibi</div>
+      <div id="kilo-hist"><div class="empty-state">Antrenman sekmesinden kilo gir.</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🥗 Beslenme geçmişi</div>
+      <div id="beslenme-hist"><div class="empty-state">Beslenme sekmesinden kayıt gir.</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const HABITS=[
+  {id:'wake',e:'🌅',n:'Erken uyanış (06:30)'},
+  {id:'gym',e:'🏋️',n:'İdman'},
+  {id:'walk',e:'🚶',n:'Yürüyüş'},
+  {id:'read',e:'📚',n:'Kitap okuma'},
+  {id:'de',e:'🇩🇪',n:'Almanca çalışma'},
+  {id:'trade',e:'📈',n:'Trade analizi'},
+  {id:'dev',e:'🧠',n:'Kişisel gelişim'},
+];
+const DAYS_CFG=[
+  {name:'Pazartesi',color:'#378ADD',rest:false},
+  {name:'Salı',color:'#1D9E75',rest:false},
+  {name:'Çarşamba',color:'#aaa',rest:true},
+  {name:'Perşembe',color:'#D4537E',rest:false},
+  {name:'Cuma',color:'#7F77DD',rest:false},
+  {name:'Cumartesi',color:'#aaa',rest:true},
+  {name:'Pazar',color:'#aaa',rest:true},
+];
+
+function getMonday(d){const dt=new Date(d);const day=dt.getDay();const diff=dt.getDate()-(day===0?6:day-1);dt.setDate(diff);dt.setHours(0,0,0,0);return dt;}
+function fmtDate(d){return d.toISOString().split('T')[0];}
+function dayKey(d){return 'day:'+fmtDate(d);}
+function loadData(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}}
+function saveData(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
+
+let weekOffset=0;
+
+function getWeekDates(offset){
+  const base=getMonday(new Date());
+  base.setDate(base.getDate()+offset*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(base);d.setDate(d.getDate()+i);return d;});
+}
+
+function updateWeekLabel(dates){
+  const fmt=d=>d.toLocaleDateString('tr-TR',{day:'numeric',month:'short'});
+  document.getElementById('week-lbl').textContent=fmt(dates[0])+' – '+fmt(dates[6]);
+}
+
+function renderDisiplin(){
+  const dates=getWeekDates(weekOffset);
+  updateWeekLabel(dates);
+  const list=document.getElementById('days-list');
+  list.innerHTML='';
+  let totalDone=0,totalMax=0;
+
+  dates.forEach((d,i)=>{
+    const cfg=DAYS_CFG[i];
+    const key=dayKey(d);
+    const data=loadData(key)||{habits:{},note:''};
+    let done=0,max=cfg.rest?0:HABITS.length;
+    if(!cfg.rest)HABITS.forEach(h=>{if(data.habits&&data.habits[h.id])done++;});
+    totalDone+=done;totalMax+=max;
+    const pct=max>0?Math.round(done/max*100):null;
+
+    const wrap=document.createElement('div');
+    const badgesHtml=cfg.rest?'':`<div class="day-badges">${HABITS.map(h=>`<div class="badge${data.habits&&data.habits[h.id]?' on':''}" title="${h.n}">${h.e}</div>`).join('')}</div>`;
+
+    wrap.innerHTML=`
+      <div class="day-row" onclick="toggleDetail('det-${i}','chev-${i}')">
+        <div class="day-dot" style="background:${cfg.color}"></div>
+        <div class="day-name">${cfg.name}</div>
+        ${badgesHtml}
+        <div class="day-pct">${cfg.rest?'—':pct+'%'}</div>
+        <div class="chevron" id="chev-${i}">▾</div>
+      </div>
+      <div class="detail" id="det-${i}">
+        ${cfg.rest?'<div class="rest-info">😴 Dinlenme günü — kas toparlanıyor</div>':
+        HABITS.map(h=>`
+          <div class="habit-row" onclick="toggleHabit('${key}','${h.id}',${i})">
+            <div class="habit-emoji">${h.e}</div>
+            <div class="habit-name">${h.n}</div>
+            <div class="check-box${data.habits&&data.habits[h.id]?' on':''}" id="chk-${key}-${h.id}">${data.habits&&data.habits[h.id]?'✓':''}</div>
+          </div>`).join('')}
+        <div class="note-wrap"><textarea placeholder="Günün notu..." onchange="saveNote('${key}',this.value)">${data.note||''}</textarea></div>
+      </div>`;
+    list.appendChild(wrap);
+  });
+
+  const wPct=totalMax>0?Math.round(totalDone/totalMax*100):0;
+  document.getElementById('dis-metrics').innerHTML=`
+    <div class="metric"><div class="metric-val">${wPct}%</div><div class="metric-lbl">Haftalık skor</div></div>
+    <div class="metric"><div class="metric-val">${totalDone}</div><div class="metric-lbl">Tamamlanan</div></div>
+    <div class="metric"><div class="metric-val">${totalMax-totalDone}</div><div class="metric-lbl">Kalan</div></div>`;
+}
+
+function toggleDetail(id,chevId){
+  const el=document.getElementById(id);
+  const ch=document.getElementById(chevId);
+  if(!el)return;
+  const open=el.classList.toggle('open');
+  if(ch)ch.classList.toggle('open',open);
+}
+
+function toggleHabit(dayK,hid,dayIdx){
+  const data=loadData(dayK)||{habits:{},note:''};
+  if(!data.habits)data.habits={};
+  data.habits[hid]=!data.habits[hid];
+  saveData(dayK,data);
+  renderDisiplin();
+}
+
+function saveNote(dayK,val){
+  const data=loadData(dayK)||{habits:{},note:''};
+  data.note=val;saveData(dayK,data);
+}
+
+function changeWeek(dir){weekOffset+=dir;renderDisiplin();}
+
+function saveOlculer(){
+  const entry={date:fmtDate(new Date()),kilo:document.getElementById('inp-kilo').value,kol:document.getElementById('inp-kol').value,gogus:document.getElementById('inp-gogus').value,bel:document.getElementById('inp-bel').value};
+  const list=loadData('olculer')||[];list.push(entry);saveData('olculer',list);
+  if(entry.kilo)document.getElementById('m-kilo').textContent=entry.kilo;
+  if(entry.kol)document.getElementById('m-kol').textContent=entry.kol;
+  if(entry.gogus)document.getElementById('m-gogus').textContent=entry.gogus;
+  if(entry.bel)document.getElementById('m-bel').textContent=entry.bel;
+  const t=document.getElementById('olcu-toast');t.style.display='inline';setTimeout(()=>t.style.display='none',2000);
+}
+
+function saveBeslenme(){
+  const entry={date:fmtDate(new Date()),protein:document.getElementById('inp-protein').value,kalori:document.getElementById('inp-kalori').value,su:document.getElementById('inp-su').value,yemek:document.getElementById('inp-yemek').value};
+  const list=loadData('beslenme-log')||[];list.push(entry);saveData('beslenme-log',list);
+  document.getElementById('inp-yemek').value='';
+  renderBeslenmeLog();
+  const t=document.getElementById('beslenme-toast');t.style.display='inline';setTimeout(()=>t.style.display='none',2000);
+}
+
+function renderBeslenmeLog(){
+  const list=loadData('beslenme-log')||[];
+  const el=document.getElementById('beslenme-log-list');
+  if(list.length===0){el.innerHTML='<div class="empty-state">Henüz kayıt yok.</div>';return;}
+  el.innerHTML=list.slice(-5).reverse().map(e=>`
+    <div class="hist-row">
+      <div class="hist-wk">${e.date}</div>
+      <div style="flex:1;font-size:12px;color:#555">${e.protein?e.protein+'g protein · ':''} ${e.kalori?e.kalori+' kcal':''}</div>
+      <div style="font-size:11px;color:#bbb">${e.su?e.su+'L su':''}</div>
+    </div>`).join('');
+}
+
+function renderGecmis(){
+  const histList=document.getElementById('hist-list');
+  histList.innerHTML='';
+  const weeks=[];
+  for(let i=0;i<16;i++){
+    const dates=getWeekDates(-i);
+    let done=0,max=0;
+    dates.forEach((d,j)=>{
+      if(DAYS_CFG[j].rest)return;
+      const data=loadData(dayKey(d))||{habits:{}};
+      max+=HABITS.length;
+      HABITS.forEach(h=>{if(data.habits&&data.habits[h.id])done++;});
+    });
+    if(max>0){
+      const pct=Math.round(done/max*100);
+      weeks.push({date:dates[0],done,max,pct});
+    }
+  }
+  if(weeks.length===0){histList.innerHTML='<div class="empty-state">Birkaç hafta takip ettikten sonra grafik burada çıkar.</div>';return;}
+  weeks.reverse().forEach(w=>{
+    const lbl=w.date.toLocaleDateString('tr-TR',{day:'numeric',month:'short'});
+    histList.innerHTML+=`<div class="hist-row"><div class="hist-wk">${lbl}</div><div class="hist-bar-wrap"><div class="hist-bar" style="width:${w.pct}%"></div></div><div class="hist-pct">%${w.pct}</div></div>`;
+  });
+
+  const kiloList=loadData('olculer')||[];
+  const kiloEl=document.getElementById('kilo-hist');
+  if(kiloList.length===0){kiloEl.innerHTML='<div class="empty-state">Antrenman sekmesinden kilo gir.</div>';}
+  else{kiloEl.innerHTML=kiloList.slice(-10).reverse().map(o=>`<div class="hist-row"><div class="hist-wk">${o.date}</div><div style="flex:1;font-size:13px;color:#1a1a1a;font-weight:500">${o.kilo||'—'} kg</div><div style="font-size:12px;color:#bbb">Kol: ${o.kol||'—'} cm · Göğüs: ${o.gogus||'—'} cm</div></div>`).join('');}
+
+  const beslenmeList=loadData('beslenme-log')||[];
+  const beslenmeEl=document.getElementById('beslenme-hist');
+  if(beslenmeList.length===0){beslenmeEl.innerHTML='<div class="empty-state">Beslenme sekmesinden kayıt gir.</div>';}
+  else{beslenmeEl.innerHTML=beslenmeList.slice(-10).reverse().map(e=>`<div class="hist-row"><div class="hist-wk">${e.date}</div><div style="flex:1;font-size:12px;color:#555">${e.protein?e.protein+'g protein':''} ${e.kalori?'· '+e.kalori+' kcal':''}</div><div style="font-size:11px;color:#bbb">${e.su?e.su+'L':''}</div></div>`).join('');}
+}
+
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='gecmis')renderGecmis();
+  if(id==='beslenme')renderBeslenmeLog();
+}
+
+const now=new Date();
+document.getElementById('today-lbl').textContent=now.toLocaleDateString('tr-TR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+const olcuList=loadData('olculer')||[];
+if(olcuList.length>0){
+  const last=olcuList[olcuList.length-1];
+  if(last.kilo)document.getElementById('m-kilo').textContent=last.kilo;
+  if(last.kol)document.getElementById('m-kol').textContent=last.kol;
+  if(last.gogus)document.getElementById('m-gogus').textContent=last.gogus;
+  if(last.bel)document.getElementById('m-bel').textContent=last.bel;
+}
+
+renderDisiplin();
+</script>
+</body>
+</html>
